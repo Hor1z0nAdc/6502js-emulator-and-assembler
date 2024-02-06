@@ -1,0 +1,427 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@1,500&display=swap');
+:root {
+    --nav: #242526;
+    --nav-hover: #4E4F50;
+    --body: #18191A;
+    --text: #FFFDFA;
+    --element: #4E4F50;
+    --reg-element: #272822;
+    --message-div: #272822;
+    --popup:#FFFDFA;
+    --disabled: lightgray;
+    --hover-color: #6EBE64;
+}
+
+[data-theme="light"] {
+    --nav: lightgray;
+    --nav-hover: #FFFDFA;
+    --body: #FFFDFA;
+    --text: #212427;
+    --element: lightgray;
+    --reg-element: #FFFDFA;
+    --message-div: #FFFDFA;
+    --popup: #4E4F50;
+    --disabled: #2F3129;
+    --hover-color: green;
+}
+
+*{
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+}
+
+body {
+    height: 100%; 
+    width: 100%; 
+    margin: 0; 
+    padding: 0;
+    color: var(--text);
+    background-color: var(--body);
+    font-family: 'DM Mono', monospace;
+}
+
+.body {
+    background-color: var(--body);
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+}
+
+textarea {
+    background-color: #0e0d0d;
+    width: 37.5vw;
+    height: 30vh;
+    color: #FFFDFA;
+    padding: 6px;
+}
+
+select {
+    font-family: 'DM Mono', monospace;
+}
+
+.emulator-body {
+    margin: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.center-format {
+    margin: auto;
+    width: 60%;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.center {
+    margin: auto;
+}
+
+.span-color {
+    color: var(--text);
+}
+
+.emulator-div {
+    background-color: var(--element);
+    border-radius: 2px;
+    width: 45vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding:  25px 0;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--nav);
+    padding: 0.45rem 0;
+    border-bottom:  1px solid #242526;
+}
+
+.guide-section {
+    background-color: var(--element);
+    width: fit-content;
+    margin: auto;
+    margin-bottom:30px;
+    margin-top:30px;
+    padding: 10px 20px;
+    border-radius: 3px;
+}
+
+.guide-title {
+    color: var(--text);
+    margin: 0 30px;
+}
+
+.guide-title:hover {
+    color: var(--hover-color);
+}
+
+td a {
+    color: var(--text);
+}
+
+td a:hover {
+    color: var(--hover-color);
+}
+
+.table-head {
+    background-color: var(--popup);
+    color: black;
+}
+
+.inst-body {
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 70px;
+    width: fit-content;
+    background-color: var(--element);
+}
+
+.inst-div {
+    background-color: var(--element);
+    padding: 20px;
+    margin-bottom: 70px;
+    border-radius: 7px;
+}
+
+.sub-div{
+    margin-bottom: 25px;
+}
+
+.inst-div h2 {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    background-color: #FFFDFA;
+    border-radius: 6px;
+    color: black;
+    text-align: center;
+}
+
+.inst-div h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    padding: 0 14px;
+    background-color: #FFFDFA;
+    color: black;
+    width: fit-content;
+}
+
+.inst-span {
+    margin-left: 80px;
+} 
+
+.inst-div span {
+    font-size: 0.9rem;
+}
+
+.m-top {
+    display: block;
+    margin-top: 20px;
+}
+
+.span-div {
+    margin-bottom: 20px;
+}
+
+.nav-div {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-element {
+    padding: 0.2rem 0.7rem;
+}
+
+.nav-element:hover {
+    border-radius: 5px;
+    background-color: var(--nav-hover);
+}
+
+.nav-link {
+    color: var(--text);
+}
+
+.active-link > div {
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 1px;
+}
+
+.editor-buttons1 {
+    display: flex;
+    gap: 20px;
+    
+}
+
+.editor-buttons2 {
+    margin: 20px 0px;
+    display: flex;
+    gap: 20px;
+}
+
+.button {
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 3px;
+    color: #0e0d0d;
+    padding: 0.2rem 0.6rem;
+    background-color: #FFFDFA;
+    font-family: 'DM Mono', monospace;
+}
+
+.m {
+    margin: 7px 0;
+}
+
+.close-button:hover {
+    background-color: var(--hover-color);
+}
+
+.button:hover {
+   color: var(--nav);
+   cursor: pointer;
+   background-color: var(--hover-color);
+}
+
+.button:disabled {
+    color: var(--nav);
+    cursor: default;
+    background-color: var(--disabled);
+}
+
+.messages-div {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-top: 20px;
+    padding: 10px 12px;
+    height: 20vh;
+    width: 40vw;
+    background: var(--message-div);
+    overflow-y: scroll
+}
+
+canvas {
+    position: relative;
+    border: 1px solid black;
+}
+
+.canvas-container {
+    display: flex;
+    justify-content: center;
+}
+
+
+.register-div {
+    background-color: var(--element);
+    width: 20vw;
+    height: fit-content;
+    padding: 20px;
+}
+
+.register-body {
+    display: flex;
+}
+
+.register-subdiv1 {
+    margin-right: 20px;
+    width: 75%;
+}
+
+.register-subdiv2 {
+    width: 25%;
+}
+
+.register-element {
+    font-size: 0.9rem;
+    color: var(--text);
+    background-color: var(--reg-element);
+    display: flex;
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    justify-content: space-between;
+}
+
+.radio-div {
+    color: black;
+}
+
+.font-input {
+    margin-left: 10px;
+    font-size: 10;
+    width: 50%;
+}
+
+.popup {
+    background-color: var(--popup);
+    padding: 10px;
+    padding-left: 15px;
+    color: black;
+    border-radius: 3px;
+    position: absolute;
+    z-index: 10;
+    color: var(--body);
+    border: 2px solid gray;
+}
+
+.popup.regular {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40vw;
+    height: 40vh;
+}
+
+.popup.monitor {
+    top: 51%;
+    right: 2%;
+    transform: translate(0, -50%);
+    width: 40vw;
+    height: 40vw;
+    z-index: 2;
+}
+
+.center-text {
+    text-align: center;
+}
+
+.buttons-container-div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+}
+
+.buttons-div {
+    display: flex;
+    justify-content: space-around;
+}
+
+.decide-button {
+    padding: 0.7rem 2rem;
+    background-color: var(--nav-hover);
+    color: var(--text);
+}
+
+.decide-button:hover {
+    cursor: pointer;
+    background-color: var(--hover-color);
+}
+
+.padding {
+    padding: 3px 8px;
+}
+
+.popup-button:hover {
+    background-color: var(--hover-color);
+}
+
+.image-container {
+    padding-top: 4%;
+    text-align: center;
+}
+
+.searched-byte {
+    color: green;
+    display: inline-block;
+}
+
+.popup-head {
+    color: var(--body);
+    display: flex;
+    justify-content: space-between;
+}
+
+.hexdump-div {
+    height: 30vh;
+    max-height: 30vh;
+    overflow: auto;
+    color: black;
+}
+
+pre {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.visualizer-span {
+    display: inline-block;
+}
+
+.okay-img {
+    width: 15%;
+    height: 15%;
+}

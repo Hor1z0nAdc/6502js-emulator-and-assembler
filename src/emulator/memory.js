@@ -1,4 +1,4 @@
-class memory {
+class Memory {
     #MemorySize;
 
     constructor() {
@@ -31,4 +31,4 @@ class memory {
     }
 }
 
-export default memory;
+export default Memory;

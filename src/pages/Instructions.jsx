@@ -4,7 +4,7 @@ const Instructions = () => {
   return (
     <div>
       <div className='inst-body'> 
-      <table>
+      <table className='main-table'>
         <tr className='table-head'>
           <th>Betöltés</th>
           <th>Mentés</th>
@@ -134,7 +134,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -213,7 +213,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az X regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -271,7 +271,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az Y regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -327,7 +327,7 @@ const Instructions = () => {
           <p className='span-div'>Ez az utasítás átviszi az akkumulátor tartalmát a megadott memóriacellába.
           Ezen kívül semmi mást nem befolyásol.
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -396,7 +396,7 @@ const Instructions = () => {
           <p className='span-div'>Ez az utasítás átmásolja az X regiszter tartalmát a címzett memóriacellába.
           Ezen kívül semmi mást nem befolyásol.
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -437,7 +437,7 @@ const Instructions = () => {
           <p className='span-div'>Ez az utasítás átmásolja az Y regiszter tartalmát a címzett memóriacellába.
           Ezen kívül semmi mást nem befolyásol.
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -481,7 +481,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az X regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -511,7 +511,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az Y regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -541,7 +541,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az X regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -571,7 +571,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -599,7 +599,7 @@ const Instructions = () => {
             Ez az utasítás átmásolja az X regiszter tartalmát a verem mutatóba.
             Ezen kívül semmi mást nem befolyásol.
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -630,7 +630,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className='inst-table'>
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -658,7 +658,7 @@ const Instructions = () => {
           Ez az utasítás az akkumulátor aktuális értékét átviszi a verem következő helyére, automatikusan 
           dekrementálva a vermet, hogy a következő üres helyre mutasson.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -686,7 +686,7 @@ const Instructions = () => {
           Ez az utasítás az akkumulátor aktuális értékét átviszi a verem következő helyére, automatikusan 
           dekrementálva a vermet, hogy a következő üres helyre mutasson.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -714,7 +714,7 @@ const Instructions = () => {
           Ez az utasítás a processzor státusz regiszter aktuális értékét átviszi a verem következő helyére, automatikusan 
           dekrementálva a vermet, hogy a következő üres helyre mutasson.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -742,7 +742,7 @@ const Instructions = () => {
           Ez az utasítás a verem következő értékét átviszi a státusz regiszterbe, 
           ezáltal az összes flaget megváltoztatja.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -772,7 +772,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után a megcímzett memóriarekesz hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -823,7 +823,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az X regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -853,7 +853,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az Y regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -883,7 +883,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után a megcímzett memóriarekesz hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -934,7 +934,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az X regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -964,7 +964,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az Y regiszter hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -996,7 +996,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1076,7 +1076,7 @@ const Instructions = () => {
           vizsgált memória 6-os bitjének értékére állítja be. Bebillenti a zero flaget, ha az 
           eredmény értéke nulla, különben a zero flag értéke nulla lesz.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1115,7 +1115,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1196,7 +1196,7 @@ const Instructions = () => {
             Bebillenti a negative flaget, ha a végrehajtás után az akkumulátor hetedik bitje egyes,
             különben a negative flag értéke nulla lesz. 
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1277,7 +1277,7 @@ const Instructions = () => {
           amikor az előjel vagy a 7-es bit megváltozik, mert az eredmény meghaladja a +127 vagy -128 értéket, 
           egyébként az overflow flag értéke 0 lesz.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1355,7 +1355,7 @@ const Instructions = () => {
           kettes komplement aritmetikával, és az eredményt az akkumulátorban tárolja. A borrow definíció 
           szerint a carry flag komplemense; ezért az eredményül kapott carry azt jelzi, hogy nem történt kölcsönzés.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1435,7 +1435,7 @@ const Instructions = () => {
             vagy 0-ra állítja. Bebillenti a carry flaget, ha a memóriában lévő érték kisebb 
             vagy egyenlő az akkumulátorral, és 0-ra állítja, ha nagyobb, mint az akkumulátor.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1515,7 +1515,7 @@ const Instructions = () => {
             vagy 0-ra állítja. Bebillenti a carry flaget, ha a memóriában lévő érték kisebb 
             vagy egyenlő az X regiszer értékével, és 0-ra állítja, ha nagyobb, mint az X regiszer.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1560,7 +1560,7 @@ const Instructions = () => {
             vagy 0-ra állítja. Bebillenti a carry flaget, ha a memóriában lévő érték kisebb 
             vagy egyenlő az Y regiszer értékével, és 0-ra állítja, ha nagyobb, mint az Y regiszer.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1604,7 +1604,7 @@ const Instructions = () => {
           bitjére állítja, bebillenti a Z flaget, ha az eredmény 0, különben 0-ra állítja, a bemenet 7-edik bitjét
           a carry flag-be menti.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1662,7 +1662,7 @@ const Instructions = () => {
           alacsony bitet a carry flagben tárolja. Az N flaget mindig 0-ra állítja, bebillenti a Z flaget, 
           ha az eredmény 0, különben 0-ra állítja, a bemenet 0-dik bitjét a carry flagbe menti.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1720,7 +1720,7 @@ const Instructions = () => {
           bitjére állítja, A negatív flaget az input 6-ik bitjére állítja, bebillenti a Z flaget, 
           ha az eredmény 0, különben 0-ra állítja.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1778,7 +1778,7 @@ const Instructions = () => {
           bitjére állítja, A negatív flaget az input carryre állítja, bebillenti a Z flaget, 
           ha az eredmény 0, különben 0-ra állítja.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1834,7 +1834,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a carry flag állapotát és feltétlesen elágazik, ha a carry flag értéke 0.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1865,7 +1865,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a carry flag állapotát és feltétlesen elágazik, ha a carry flag értéke 1.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1895,7 +1895,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a zéró flag állapotát és feltétlesen elágazik, ha a zéró flag értéke 1.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1925,7 +1925,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a negatív flag állapotát és feltétlesen elágazik, ha a negatív flag értéke 1.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1955,7 +1955,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a zéró flag állapotát és feltétlesen elágazik, ha a zéró flag értéke 0.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -1985,7 +1985,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a negatív flag állapotát és feltétlesen elágazik, ha a negatív flag értéke 0.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2015,7 +2015,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a túlcsordulás flag állapotát és feltétlesen elágazik, ha a túlcsordulás flag értéke 0.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2045,7 +2045,7 @@ const Instructions = () => {
               Ez az utasítás teszteli a túlcsordulás flag állapotát és feltétlesen elágazik, ha a túlcsordulás flag értéke 1.
               Egyedül a program számláló értékét változtatja meg, ha elágazás történik.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2074,7 +2074,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 0-ra inicizalizálja a carry flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2101,7 +2101,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 0-ra inicizalizálja a decimális flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2128,7 +2128,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 0-ra inicizalizálja a megszakítás kikapcsolása flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2155,7 +2155,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 0-ra inicizalizálja a túlcsordulás flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2182,7 +2182,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 1-re inicizalizálja a carry flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2209,7 +2209,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 1-re inicizalizálja a decimális flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2236,7 +2236,7 @@ const Instructions = () => {
           <p className='span-div'>
               Ez az utasítás 1-re inicizalizálja a megszakítás kikapcsolása flaget.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2266,7 +2266,7 @@ const Instructions = () => {
           a veremre kerül a processzor státuszával együtt a break utasítás elején. A mikroprocesszor ezután 
           átadja a vezérlést a megszakítási vektornak.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2293,7 +2293,7 @@ const Instructions = () => {
           <p className='span-div'>
           Az adott értékre állítja a programszámlálót.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2333,7 +2333,7 @@ const Instructions = () => {
           A JSR ezután az ugrás utasítást követő címeket a programszámláló alacsony és a programszámláló 
           magas címére helyezi át, ezzel irányítva a programot, hogy az új címen kezdődjön.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2363,7 +2363,7 @@ const Instructions = () => {
           flaget arra a pozícióra, ahol a megszakítás idején voltak, és a programszámlálót 
           visszaállítja a megszakítás előtti állapotba.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2392,7 +2392,7 @@ const Instructions = () => {
           programszámlálóba, és növeli a programszámlálót úgy, hogy az a JSR-t követő utasításra mutasson. 
           A veremmutatót kétszer inkrementálja.
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>
@@ -2418,7 +2418,7 @@ const Instructions = () => {
           </div>
           <p className='span-div'>
           </p>
-          <table>
+          <table className="inst-table">
             <tr className='table-head'>
               <th>Címzés módja</th>
               <th>Assembly szintaxis</th>

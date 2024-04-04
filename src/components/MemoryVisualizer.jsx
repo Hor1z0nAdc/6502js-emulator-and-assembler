@@ -31,39 +31,9 @@ const MemoryVisualizer = ({memory}) => {
     }
 
     return decimal;
-}
+  }
 
-
-  function lookupHandler() {
-    let memoryAddress;
-    let isError = false;
-    let errorMessage = "";
-    
-    //Error handling
-    memoryAddress = hexToDecimal(searchedMemory);
-
-    if(searchedMemory.length == 0) {
-      isError = true;
-      errorMessage = "Nem adott meg számot!";
-     
-    } 
-    else if(isNaN(memoryAddress)) {
-      isError = true;
-      errorMessage = "Nem adott meg megfelelő számot!";
-    }
-    else if(memoryAddress > 0xffff) {
-      isError = true;
-      errorMessage = "Túl nagy számot adott meg!";
-    }
-    
-    if(isError) {
-      setSearchResult1(errorMessage);
-      setSearchResult2("");
-      setSearchedByte("");
-      return;
-    }
-    //End of error handling
-
+  function determineResultedBytes(memoryAddress) {
     let result1 = "";
     let result2 = ""
     let currentAddress;
@@ -122,8 +92,42 @@ const MemoryVisualizer = ({memory}) => {
         }
     }
 
-    setSearchResult1(result1);
-    setSearchResult2(result2);
+    return {result1, result2};
+  }
+
+  function lookupHandler() {
+    let memoryAddress;
+    let isError = false;
+    let errorMessage = "";
+    
+    //Error handling
+    memoryAddress = hexToDecimal(searchedMemory);
+
+    if(searchedMemory.length == 0) {
+      isError = true;
+      errorMessage = "Nem adott meg számot!";
+     
+    } 
+    else if(isNaN(memoryAddress)) {
+      isError = true;
+      errorMessage = "Nem adott meg megfelelő számot!";
+    }
+    else if(memoryAddress > 0xffff) {
+      isError = true;
+      errorMessage = "Túl nagy számot adott meg!";
+    }
+    
+    if(isError) {
+      setSearchResult1(errorMessage);
+      setSearchResult2("");
+      setSearchedByte("");
+      return;
+    }
+    //End of error handling
+
+    const results = determineResultedBytes(memoryAddress);
+    setSearchResult1(results.result1);
+    setSearchResult2(results.result2);
   }
 
   return (

@@ -1,4 +1,4 @@
-import { opcodes } from "./instructions.js";
+import { opcodes } from "../data/instructions.js";
 const branchStatements = ["BEQ", "BNE", "BCS", "BCC", "BMI", "BPL", "BVC", "BVS"];
 const commandTypes = {
     NoOperand: "nooperand",
@@ -13,6 +13,20 @@ const commandTypes = {
     AccumulatorStatement: "AccumulatorStatement",
     BadCommand: "badcommand"
 }
+const addressingModes = {
+    immediate: "IM",
+    absolute: "ABS",
+    absoluteX: "ABSX",
+    absoluteY: "ABSY",
+    indirect: "IND",
+    indirectX: "INDX",
+    indirectY: "INDY",
+    zero: "ZP",
+    zeroX: "ZPX",
+    zeroY: "ZPY",
+}
+const accumulatorAddressingInst = ["ASL", "LSR", "ROL", "ROR"];
+
 
 const labelOperandPattern = /^[a-zA-Z_]+$/;
 const labelPattern = /^[a-zA-Z_]+:$/;
@@ -28,7 +42,7 @@ const zeroPagePattern = /^\$[0-9a-fA-F]{1,2}$/;
 const zeroPageXPattern = /^\$[0-9a-fA-F]{2},(x|X)$/;
 const zeroPageYPattern = /^\$[0-9a-fA-F]{2},(y|Y)$/;
 
-class assembler {
+class Assembler {
     constructor() {
         this.lines = [];
         this.symbolTable = {};
@@ -54,28 +68,31 @@ class assembler {
             this.errorMessage = "Üres fájl";
             return { isError: true, message: this.errorMessage };
         }
+
         this.initAssembling();
     
         //get starting address
         const firstLine = this.lines[0].trim().split(/\s+/);
         this.startingAddress = this.determineStartingAddress(firstLine);
-        this.currentAddress = this.startingAddress;
+
         if(!this.startingAddress) {
             return { isError: true, message: this.errorMessage, errorLine: 1 };
         }
-    
+        this.currentAddress = this.startingAddress;
+        
+        //Actual assemblying starts here
         this.zeroPass();
+
         const firstPassResult = this.firstPass();
         if(firstPassResult.isError) {
             return firstPassResult;
         }
-        const secondPassResult = this.secondPass();
 
+        const secondPassResult = this.secondPass();
         if(secondPassResult.isError) {
             return secondPassResult;
         }
         
-        console.log(this.addressLineMap)
         return  { isError: false, labelNum: firstPassResult.labelNum, bytes: this.assembledCode.length, stringBytes: this.assembledStringData.length };
     }
 
@@ -108,15 +125,17 @@ class assembler {
 
             if(this.isString(seperatedLine)) {
                 const line = this.lines[i];
+
                 let value = line.substring(line.indexOf('"'), line.length);
-                //let value = seperatedLine.slice(2,seperatedLine.length).join(" ");
                 value = value.slice(1);
                 value = value.slice(0, value.length-1);
+
                 this.stringTable[seperatedLine[1]] = value;
                 this.lines[i] = "";
                 continue;
-            }
+            } 
 
+            //replace constant references in current line with constant value
             Object.keys(this.literalTable).forEach(key => {
                 this.lines[i] = this.lines[i].replace(key, "$" + this.literalTable[key].toString(16));
             })
@@ -124,10 +143,6 @@ class assembler {
     }
     
     firstPass() {
-        if(this.lines.length == 0) {
-            return { isError: true, message: "A kód nem tartalmaz parancsot!" };
-        }
-    
         for(let i = 0; i < this.lines.length; i++) {
             this.currentLineAddress++;
 
@@ -139,58 +154,38 @@ class assembler {
             if(this.isLineLabel(seperatedLine)) {
                 let label = seperatedLine[0];
                 label = label.slice(0, -1);
+
                 this.symbolTable[label] = this.codeLineNum - 1;
                 continue;
             }
             
             const command = opcodes[seperatedLine[0].toUpperCase()];
             if(this.isMnemonic(command, seperatedLine)) {
+                if(seperatedLine.length == 1 && isNaN(command) && !accumulatorAddressingInst.includes(seperatedLine[0])) {
+                    return { isError: true, message: "Ehhez a parancshoz nem létezik implikált címzés", errorLine: i + 1 };
+                }
+
                 const commandType = this.determineCommandType(command, seperatedLine);
                 const processingResult = this.processCommand(commandType, command, seperatedLine);
                 
                 if(processingResult.isError) {
                     return { isError: true, message: processingResult.message, errorLine: i + 1 };
                 }
+
                 this.codeLineNum++;
                 continue;
             }
             
             return { isError: true, message: "Ismeretlen kifejezés!", errorLine: i + 1 };
-            
         }   
 
         if(this.assembledCode.length == 0) {
             return { isError: true, message: "A kód nem tartalmaz parancsot!" };
         }
         
-       this.codeEndAddress = this.currentAddress - 1;
-       
-       let currentStringIndex = 0;
-       Object.entries(this.stringTable).forEach(([key, value]) => {
-            const stringAddress = this.currentAddress;
-  
-            for(let i = 0; i < value.length; i++) {
-                let data = value.charCodeAt(i);
-
-                if(i+1 < value.length) {
-                    if(value[i] + value[i+1] == "\\n") {
-                        data = 10;
-                        i++;
-                    }
-                    else if(value[i] + value[i+1] == "\\t") {
-                        data = 9;
-                        i++;
-                    }
-
-                }
-               
-                this.assembledStringData[currentStringIndex++] = data;
-                this.currentAddress++;
-            }
-
-            this.stringTable[key] = stringAddress;
-        });
-
+        this.codeEndAddress = this.currentAddress - 1;
+        this.saveStrings();
+    
         return { isError: false, labelNum: Object.keys(this.symbolTable).length };
     }
     
@@ -200,48 +195,22 @@ class assembler {
         for(let i = 0; i < this.assembledCode.length; i++) {
             memoryCellValue = this.assembledCode[i];
 
-            //when the current assembled code element is a label
+            //when the current assembled code element is a label or string
             if(labelOperandPattern.test(memoryCellValue)) {
 
                 //check for valid label - one, that is assigned to a code piece, not just referenced
-                if(this.symbolTable[memoryCellValue] != undefined) {
-                    const statementStartIndex = this.symbolTable[memoryCellValue];
-                    const statementAddress = this.addresses[statementStartIndex];
-
-                    //when the current code is a jump instruction
-                    if(this.assembledCode[i+1] == "") {
-                        let hexStringAddress = statementAddress.toString(16);
-                        hexStringAddress = hexStringAddress.padStart(4, "0");
-                        const bytes = this.getLowHighByte(hexStringAddress);
-    
-                        this.assembledCode[i] = bytes.lowByte;
-                        this.assembledCode[i+1] = bytes.highByte;
-                    }
-                    //when the current code is a branching instruction
-                    else {
-                        const branchStatementAddress = this.addressByteIndexMap[i];
-                        const afterBranchStatementAddress = branchStatementAddress + 2
-                        const difference = statementAddress - afterBranchStatementAddress;
-                        const twosComplementDifference = this.convertToTwosComplement(difference);
-                        
-                        this.assembledCode[i] = twosComplementDifference;
-                    }
-
-                }
-                //check for valid defined variable
-                else if(this.literalTable[memoryCellValue] != undefined) {
-                    this.assembledCode[i] = this.literalTable[memoryCellValue];
+                const symbolTableValue = this.symbolTable[memoryCellValue];
+                if(symbolTableValue != undefined) {
+                    this.processSymbol(symbolTableValue, i);
                 }
                 else if(this.stringTable[memoryCellValue] != undefined) {
                     const stringAddress  = this.stringTable[memoryCellValue];
-
-                    let hexStringAddress = stringAddress.toString(16);
-                    hexStringAddress = hexStringAddress.padStart(4, "0");
-                    const bytes = this.getLowHighByte(hexStringAddress);
+                    const bytes = this.toHexLowHighByte(stringAddress);
 
                     this.assembledCode[i] = bytes.lowByte;
                     this.assembledCode[i+1] = bytes.highByte;
                 }
+                //$ffd2 - pring character subrutin
                 else if(memoryCellValue == "$ffd2") {
                     this.assembledCode[i] = 0xd2;
                     this.assembledCode[i+1] = 0xff;
@@ -258,6 +227,66 @@ class assembler {
         return { isError: false }; 
     }
 
+    saveStrings() {
+        let currentStringIndex = 0;
+
+        Object.entries(this.stringTable).forEach(([key, value]) => {
+             const stringAddress = this.currentAddress;
+            
+             //change character to utf-16 number
+             for(let i = 0; i < value.length; i++) {
+                 let data = value.charCodeAt(i);
+                
+                 //check for symbols
+                 if(i+1 < value.length) {
+                     if(value[i] + value[i+1] == "\\n") {
+                         data = 10;
+                         i++;
+                     }
+                     else if(value[i] + value[i+1] == "\\t") {
+                         data = 9;
+                         i++;
+                     }
+                 }
+                
+                 this.assembledStringData[currentStringIndex++] = data;
+                 this.currentAddress++;
+             }
+ 
+             this.stringTable[key] = stringAddress;
+         });
+    }
+
+    processSymbol(symbolTableValue, index) {
+        const statementStartIndex = symbolTableValue;
+        const statementAddress = this.addresses[statementStartIndex];
+
+        //when the current code is a jump instruction
+        if(this.assembledCode[index+1] == "") {
+            const bytes = this.toHexLowHighByte(statementAddress);
+            
+            this.assembledCode[index] = bytes.lowByte;
+            this.assembledCode[index+1] = bytes.highByte;
+        }
+        //when the current code is a branching instruction
+        else {
+            const branchStatementAddress = this.addressByteIndexMap[index];
+            const afterBranchStatementAddress = branchStatementAddress + 2
+            const difference = statementAddress - afterBranchStatementAddress;
+            const twosComplementDifference = this.convertToTwosComplement(difference);
+            
+            this.assembledCode[index] = twosComplementDifference;
+        }
+    }
+
+    toHexLowHighByte(value) {
+        let hexString = value.toString(16);
+        hexString = hexString.padStart(4, "0");
+        const bytes = this.getLowHighByte(hexString);
+
+        return bytes;
+    }
+
     convertToTwosComplement(number) {
         if(number < -128 || number > 127) {
             return undefined;
@@ -268,8 +297,8 @@ class assembler {
         }
     
         const positiveNumber = -number;
-    
         let binaryString = positiveNumber.toString(2).padStart(8, "0");
+
         for(let i = 0; i < binaryString.length; i++) {
             if(binaryString[i] == "0") {
                 binaryString = this.replaceCharacter(binaryString, i, "1")
@@ -279,6 +308,7 @@ class assembler {
             } 
     
         }
+
         let convertedNumber = parseInt(binaryString, 2);
         convertedNumber++;
     
@@ -306,16 +336,16 @@ class assembler {
         }
        
         if(isNaN(operandNum)) {
-            this.errorMessage = "A megadott kezdő memóriacím nem egy érvényes szám!"
+            this.errorMessage = "A megadott kezdő memóriacím nem egy érvényes szám!";
             return undefined;
         }
         if(!this.isInAddressSpace(operandNum)) {
-            this.errorMessage = "Kicímzett a memóriacím tartományból!"
+            this.errorMessage = "Kicímzett a memóriacím-tartományból!";
             return undefined;
         }
     
         //remove the org, so the assembler won't have a problem processing it
-        this.lines.shift();
+        this.lines[0] = "";
         this.currentLineAddress++;
         address = operandNum;
         return address;
@@ -470,34 +500,34 @@ class assembler {
         let mode;
     
         if (absolutePattern.test(word)) {
-            mode = "ABS";
+            mode = addressingModes.absolute;
         }
         else if (absoluteXPattern.test(word)) {
-            mode = "ABSX";
+            mode = addressingModes.absoluteX;
         }
         else if (absoluteYPattern.test(word)) {
-            mode = "ABSY";
+            mode = addressingModes.absoluteY;
         }
         else if (indirectPattern.test(word)) {
-            mode = "IND";
+            mode = addressingModes.indirect;
         }
         else if (indirectXPattern.test(word)) {
-            mode = "INDX";
+            mode = addressingModes.indirectX;
         }
         else if (indirectYPattern.test(word)) {
-            mode = "INDY";
+            mode = addressingModes.indirectY;
         }
         else if (zeroPagePattern.test(word) || word == "$0") {
-            mode = "ZP";
+            mode = addressingModes.zero;
         }
         else if (zeroPageXPattern.test(word)) {
-            mode = "ZPX";
+            mode = addressingModes.zeroX;
         }
         else if (zeroPageYPattern.test(word)) {
-            mode = "ZPY";
+            mode = addressingModes.zeroY;
         }
         else if(this.isImmediate(word)) {
-            mode = "IM";
+            mode = addressingModes.immediate;
         }
         else {
             mode = undefined;
@@ -589,6 +619,7 @@ class assembler {
             this.currentAddress += 1;
         }
         else {
+
             const addressingMode = this.determineAddressMode(seperatedLine[1]);
 
             if(!addressingMode) {
@@ -598,13 +629,16 @@ class assembler {
 
             let opcode = command;
             if(isNaN(opcode)) {
-                opcode = command[addressingMode];
+               opcode = command[addressingMode];
+
                if(!opcode) {
-                this.errorMessage = `Ehhez a parancshoz nem létezik ${addressingMode} címzés`;
-                return { isError: true, message: this.errorMessage };
+                    const hungarianAddressingMode = this.addressingModeToHungarian(addressingMode);
+                    this.errorMessage = `Ehhez a parancshoz nem létezik ${hungarianAddressingMode} címzés`;
+                    return { isError: true, message: this.errorMessage };
                }
 
             }
+
             this.processOperandStatement(opcode, addressingMode, seperatedLine[1]);
         }
 
@@ -612,39 +646,44 @@ class assembler {
     }
     
     processOperandStatement(opcode, addrMode, operand) {
-        if(addrMode == "ABS") {
+        if(addrMode == addressingModes.absolute) {
             operand = operand.slice(1);
+
             if(operand.length == 3) {
                 operand = "0" + operand;
             } 
-
             this.handleTwoOperandStatement(opcode, operand);
         }
-        else if(addrMode == "ABSX" || addrMode == "ABSY") {
+        else if(addrMode == addressingModes.absoluteX || 
+                addrMode == addressingModes.absoluteY) {
             operand = operand.slice(0,-2);
             operand = operand.slice(1);
-            if(operand.length == 3) operand = "0" + operand;
+
+            if(operand.length == 3) {
+                operand = "0" + operand;
+            }
             this.handleTwoOperandStatement(opcode, operand);
         }
-        else if(addrMode == "ZP") {
+        else if(addrMode == addressingModes.zero) {
             this.handleOneOperandStatement(opcode, operand);
         }
-        else if(addrMode == "ZPX" || addrMode == "ZPY") {
+        else if(addrMode == addressingModes.zeroX || 
+                addrMode == addressingModes.zeroY) {
             operand = operand.slice(0,-2);
             this.handleOneOperandStatement(opcode, operand);
         }
-        else if(addrMode == "IND") {
+        else if(addrMode == addressingModes.indirect) {
             operand = operand.slice(1);
             operand = operand.slice(0,-1);
             this.handleTwoOperandStatement(opcode,operand);
         }
-        else if(addrMode == "INDX" || addrMode == "INDY") {
+        else if(addrMode == addressingModes.indirectX || 
+                addrMode == addressingModes.indirectY) {
             operand = operand.slice(0,-3);
             operand = operand.slice(1);
-    
             this.handleOneOperandStatement(opcode,operand);
         }
-        else if(addrMode == "IM") {
+        else if(addrMode == addressingModes.immediate) {
             let operandNum;
             
             if(operand[1] == "$") {
@@ -705,8 +744,13 @@ class assembler {
     getStringLoadType(word) {
         const processedWord = word.substring(word.length - 1, word.length);
 
-        if(processedWord.toUpperCase() == "X") return commandTypes.StringLoadX;
-        if(processedWord.toUpperCase() == "Y") return commandTypes.StringLoadY;
+        if(processedWord.toUpperCase() == "X") {
+             return commandTypes.StringLoadX;
+        }
+        if(processedWord.toUpperCase() == "Y") {
+            return commandTypes.StringLoadY;
+        }
+
         return commandTypes.BadCommand;
     }
 
@@ -776,7 +820,30 @@ class assembler {
     
         return hexDump;
     }
+
+    addressingModeToHungarian(mode) {
+        switch(mode) {
+            case addressingModes.immediate:
+                return "azonnali";
+            case addressingModes.indirect:
+                return "indirekt";
+            case addressingModes.indirectX:
+                return "indexelt indirekt";
+            case addressingModes.indirectY:
+                return "indirekt indexelt";
+            case addressingModes.absolute:
+                return "abszolút";
+            case addressingModes.absoluteY:
+            case addressingModes.absoluteX:
+                return "abszolút indexelt";
+            case addressingModes.zero:
+                return "zéró lap";    
+            case addressingModes.zeroY:       
+            case addressingModes.zeroX:
+                return "zéró lap indexelt";
+        }
+    }
 }
 
-export default assembler;
+export default Assembler;
 

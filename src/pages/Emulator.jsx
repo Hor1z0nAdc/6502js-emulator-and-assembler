@@ -5,22 +5,22 @@ import Messages from "../components/Messages"
 import Registers from "../components/Registers"
 import Popup from '../components/Popup'
 import MemoryVisualizer from '../components/MemoryVisualizer'
-import assembler from '../emulator/assembler'
-import cpu from "../emulator/cpu"
-import memory from "../emulator/memory"
+import Assembler from '../emulator/assembler'
+import Cpu from "../emulator/cpu"
+import Memory from "../emulator/memory"
 
-const keyAddress = 0xff;
+const KEY_ADDRESS = 0xff;
 const PiXEL_NUM_PER_LINE = 32;
-const colors = {0: "black", 1: "white", 2: "red", 3: "cyan", 4: "purple", 5: "green",
-                6: "blue", 7: "yellow", 8: "orange", 9: "brown", 10: "#ffcccb", 11: "DarkGray",
-                12: "gray", 13: "PaleGreen", 14: "LightSkyBlue", 15: "LightGray"}
+const MONITOR_START_ADDRESS = 0x200;
+const COLORS = ["black", "white","red","cyan","purple","green","blue","yellow","orange","brown","#ffcccb",
+                "DarkGray","gray","PaleGreen","LightSkyBlue","LightGray"];
 
 const Emulator = () => {
   const [code, setCode] = useState("");
   const [messages, setMessages] = useState("");
   const [numSystem, setNumSystem] = useState("hexa");
   const [registers, setRegisters] = useState({A: "0", X:"0", Y:"0", PC: "0", SP:"0", SR: "0"});
-  const [statusFlags, setStatusFlags] = useState({N: 0, V:0, Unused:0, B: 0, D: 0, I: 0, Z:0, C: 0});
+  const [statusFlags, setStatusFlags] = useState({N: 0, V:0, Unused:1, B: 0, D: 0, I: 0, Z:0, C: 0});
   const [showMemory, setShowMemory] = useState(false);
   const [showMonitor, setShowMonitor] = useState(false);
   const [showConsole, setShowConsole] = useState(false);
@@ -30,9 +30,9 @@ const Emulator = () => {
   const [needKey, setNeedKey] = useState(false);
   const prevNumSystemRef = useRef("decimal");
   const currentNumSystemRef = useRef("hexa");
-  const AssemblerRef = useRef(new assembler());
-  const MemoryRef = useRef(new memory());
-  const CpuRef = useRef(new cpu(MemoryRef.current));
+  const AssemblerRef = useRef(new Assembler());
+  const MemoryRef = useRef(new Memory());
+  const CpuRef = useRef(new Cpu(MemoryRef.current));
   const canvasRef = useRef();
   const ctxRef = useRef();
   const pixelWidthRef = useRef();
@@ -57,14 +57,14 @@ const Emulator = () => {
   function draw(memory) {
     const ctx = ctxRef.current;
     const width = pixelWidthRef.current;
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    //ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-    let address = 0x200;
-
+    let address = MONITOR_START_ADDRESS;
+    
     for(let i = 0; i < 32; i++) {
-        for(let j = 0; j < 32; j++) {
+      for(let j = 0; j < 32; j++) {
             const byte = memory.getByte(address++) % 16;
-            const color = colors[byte];
+            const color = COLORS[byte];
             ctx.fillStyle = color;
             ctx.fillRect(width*j, width*i, width, width);
         }
@@ -73,57 +73,54 @@ const Emulator = () => {
 
   function transformRegValues(values) {
     let newRegisterValues;
+    let pairs = Object.entries(values);
+    let registersObject = JSON.parse(JSON.stringify(values));
 
     if(currentNumSystemRef.current == "hexa") {
-      newRegisterValues = transformRegToHexa(values);
+      newRegisterValues = transformRegToHexa(pairs, registersObject);
     }
     else if(currentNumSystemRef.current == "binary") {
-        newRegisterValues = transformRegToBinary(values);
+        newRegisterValues = transformRegToBinary(pairs, registersObject);
     }
     else {
-        newRegisterValues = transformRegToDecimal(values);
+        newRegisterValues = transformRegToDecimal(pairs, registersObject);
     }
 
     prevNumSystemRef.current = currentNumSystemRef.current;
     return newRegisterValues;
   }
 
-  function transformRegToHexa(values) {
-    let pairs = Object.entries(values);
-    let registersObject = JSON.parse(JSON.stringify(values));
-
-
+  function transformRegToHexa(pairs, registersObject) {
     let newValue;
+
     pairs.forEach(([key, value]) => {
         newValue = preprocessForTransform(value);
-        registersObject[key] = toHexa(newValue);
+        newValue = newValue.toString(16).padStart(4, "0");;
+        newValue = "$" + newValue;
+        registersObject[key] = newValue;
     });
     
     return registersObject;
   }
 
-  function transformRegToBinary(values) {
-    let pairs = Object.entries(values);
-    let registersObject = JSON.parse(JSON.stringify(values));
-
+  function transformRegToBinary(pairs, registersObject) {
     let newValue;
+
     pairs.forEach(([key, value]) => {
         newValue = preprocessForTransform(value);
-        registersObject[key] = toBinary(newValue);
+        newValue = newValue.toString(2).padStart(8, "0");
+        registersObject[key] = newValue;
     });
     
     return registersObject;
   }
 
-  function transformRegToDecimal(values) {
-    let pairs = Object.entries(values);
-    let registersObject = JSON.parse(JSON.stringify(values));
-
+  function transformRegToDecimal(pairs, registersObject) {
     let newValue;
+
     pairs.forEach(([key, value]) => {
         newValue = preprocessForTransform(value);
-        
-        registersObject[key] = toDecimal(newValue);
+        registersObject[key] = newValue.toString();
     });
     
     return registersObject;
@@ -144,28 +141,8 @@ const Emulator = () => {
     return newValue;
   }
 
-  function toBinary(value) {
-    let newValue = value.toString(2);
-    newValue = newValue.padStart(8, "0");
-
-    return newValue;
-  }
-
-  function toHexa(value) {
-    let newValue = value.toString(16);
-    newValue = newValue.padStart(4, "0");
-    newValue = "$" + newValue;
-
-    return newValue;
-  }
-
-  function toDecimal(value) {
-    let newValue = value.toString();
-    return newValue;
-  }
-
   function keyDownHandler(event) {
-    MemoryRef.current.setByte(keyAddress, event.key.charCodeAt(0));
+    MemoryRef.current.setByte(KEY_ADDRESS, event.key.charCodeAt(0));
     setNeedKey(false);
   }
 

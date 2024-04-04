@@ -14,6 +14,7 @@ const Guide = () => {
         <a className='guide-title' href="#decimális">Decimális mód</a>
         <a className='guide-title' href="#egyéb">Egyéb tudnivalók</a>
       </div>
+      
        <div id="regiszterek" className='center-format'>
           <div className='inst-div'>
               <h2>Regiszterek</h2>

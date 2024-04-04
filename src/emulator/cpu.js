@@ -1,22 +1,18 @@
-import * as INS from "./instructions.js"
+import * as INS from  "../data/instructions.js";
 
-const RandomByteAddress = 0xfe;
-const CarryFlagBit            = 0b00000001;
-const cPos = 0;
-const ZeroFlagBit             = 0b00000010;
-const zPos = 1;
-const InterruptDisableFlagBit = 0b00000100;
-const iPos = 2;
-const DecimalFlagBit          = 0b00001000;
-const dPos = 3;
-const BreakFlagBit            = 0b00010000;
-const bPos = 4;
-const UnusedFlagBit           = 0b00100000;
-const uPos = 5;
-const OverflowFlagBit         = 0b01000000;
-const vPos = 6;
-const NegativeFlagBit         = 0b10000000;
-const nPos = 7;
+const CARRY_FLAG_BIT          = 0b00000001;
+const ZERO_FLAG_BIT           = 0b00000010;
+const INTERRUPT_DISABLE_FLAG_BIT = 0b00000100;
+const DECIMAL_FLAG_BIT          = 0b00001000;
+const BREAK_FLAG_BIT          = 0b00010000;
+const UNUSED_FLAG_BIT          = 0b00100000;
+const OVERFLOW_FLAG_BIT        = 0b01000000;
+const NEGATIVE_FLAG_BIT         = 0b10000000;
+
+const INITIAL_STATUS_REGISTER_VALUE = 0b00100000;
+const RANDOM_BYTE_ADDRESS = 0xfe;
+const BYTE_REGISTER_NAMES = ['SP', 'A', 'X', 'Y'];
+const FLAG_REGISTER_NAMES = ['C', 'Z', 'I', 'D', 'B', 'Unused', 'V', 'N',];
 
 //C(0) - Carry flag
 //Z(1): Zero Flag
@@ -27,21 +23,14 @@ const nPos = 7;
 //V(6): Overflow
 //N(7): Negative
 
-class cpu {
+class Cpu {
     constructor(memory) {
         this.memory = memory;
         this.endAddress;
         //Stack is 256 bytes $0100 - $01FF) starting from $01FF
-        this.byteRegisterNames = ['SP', 'A', 'X', 'Y'];
-        this.wordRegisterNames = ['PC'];
-        this.flagRegisterNames = ['C', 'Z', 'I', 'D', 'B', 'Unused', 'V', 'N',];
         this.statusFlags = 0b00100000;
-        this.byteRegisters = createRegisters(this.byteRegisterNames.length);
+        this.byteRegisters = createRegisters(BYTE_REGISTER_NAMES.length);
         this.wordRegisters = createRegisters(2);
-        this.byteRegisterMap = this.byteRegisterNames.reduce((map, name, i) => {
-            map[name] = i;
-            return map;
-        }, {})
     }
 
     //Sets the registers to default value, initialisez the memory with zero 
@@ -51,10 +40,11 @@ class cpu {
       this.setRegister('Y', 0);
       this.setRegister('PC', PCValue);
       this.setRegister('SP', 0x01FF);
+      this.statusFlags = INITIAL_STATUS_REGISTER_VALUE;
       this.memory.initialise();
 
       const newRandomByte = this.randomByte();
-      this.memory.setByte(RandomByteAddress, newRandomByte);
+      this.memory.setByte(RANDOM_BYTE_ADDRESS, newRandomByte);
     }
 
     copyStateFromAnotherCpu(anotherCpu) {
@@ -74,88 +64,63 @@ class cpu {
     //looks up the index of the given register(regName) in the correspondent register map and returns the value 
     //from the register Arraybuffer at the found index
     getRegister(regName) {
+        const regIndex = BYTE_REGISTER_NAMES.indexOf(regName);
+
         if(regName == 'PC') {
             return this.wordRegisters.getUint16(0);
         }
-        else if(this.byteRegisterNames.includes(regName)){
-            const regIndex = this.byteRegisterMap[regName];
+        else if(regIndex != -1){
             return this.byteRegisters.getUint8(regIndex);
         }
-        else if(this.flagRegisterNames.includes(regName)) {
-            let isSet;
-
-            switch(regName) {
-                case 'C':
-                    isSet = (CarryFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'Z':
-                    isSet = (ZeroFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'I':
-                    isSet = (InterruptDisableFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'D':
-                    isSet = (DecimalFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'B':
-                    isSet = (BreakFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'Unused':
-                    isSet = (UnusedFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'V':
-                    isSet = (OverflowFlagBit & this.statusFlags) > 0;
-                    break;
-                case 'N':
-                    isSet = (NegativeFlagBit & this.statusFlags) > 0;
-                    break;
-                default:
-                    isSet = false;
-                    break;
-            }
-            return isSet;
+       
+        let isSet;
+        switch(regName) {
+            case 'C':
+                isSet = (CARRY_FLAG_BIT& this.statusFlags) > 0;
+                break;
+            case 'Z':
+                isSet = (ZERO_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'I':
+                isSet = (INTERRUPT_DISABLE_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'D':
+                isSet = (DECIMAL_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'B':
+                isSet = (BREAK_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'Unused':
+                isSet = (UNUSED_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'V':
+                isSet = (OVERFLOW_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            case 'N':
+                isSet = (NEGATIVE_FLAG_BIT & this.statusFlags) > 0;
+                break;
+            default:
+                isSet = undefined;
+                break;
         }
+
+        return isSet;
     }
 
     //looks up the index of the given register(regName) in the in the correspondent register map and 
    //sets the value of the register Arraybuffer at the found index
     setRegister(regName, newValue) {
+        const regIndex = BYTE_REGISTER_NAMES.indexOf(regName);
+
         if(regName == 'PC') {
              this.wordRegisters.setUint16(0, newValue);
         }
-        else if(this.byteRegisterNames.includes(regName)){
-            const regIndex = this.byteRegisterMap[regName];
+        else if(regIndex != -1){
             this.byteRegisters.setUint8(regIndex, newValue);
         }
-        else if(this.flagRegisterNames.includes(regName)) {
-            switch(regName) {
-                case 'C':
-                    this.statusFlags = this.modifyStatusFlags(cPos, newValue);
-                    break;
-                case 'Z':
-                    this.statusFlags = this.modifyStatusFlags(zPos, newValue);
-                    break;
-                case 'I':
-                    this.statusFlags = this.modifyStatusFlags(iPos, newValue);
-                    break;
-                case 'D':
-                    this.statusFlags = this.modifyStatusFlags(dPos, newValue);
-                    break;
-                case 'B':
-                    this.statusFlags = this.modifyStatusFlags(bPos, newValue);
-                    break;
-                case 'Unused':
-                    this.statusFlags = this.modifyStatusFlags(uPos, newValue);
-                    break;
-                case 'V':
-                    this.statusFlags = this.modifyStatusFlags(vPos, newValue);
-                    break;
-                case 'N':
-                    this.statusFlags = this.modifyStatusFlags(nPos, newValue);
-                    break;
-                default:
-                    break;
-            }
+        else if(FLAG_REGISTER_NAMES.includes(regName)) {
+            const flagNameIndex = FLAG_REGISTER_NAMES.indexOf(regName);
+            this.statusFlags = this.modifyStatusFlags(flagNameIndex, newValue);
         }
     }
 
@@ -171,7 +136,9 @@ class cpu {
     fetchWord() {
         const instructionAddress = this.getRegister('PC');
         let data = this.memory.getByte(instructionAddress);
-        data |= (this.memory.getByte(instructionAddress + 1) << 8);
+        const nextByte = (this.memory.getByte(instructionAddress + 1) << 8);
+
+        data |= nextByte;
         this.setRegister('PC', this.getRegister('PC') + 2);
         return data;
     }
@@ -198,11 +165,6 @@ class cpu {
     //overwrites the memory at given address with a given word(2 * byte) value
     writeWord() {
         this.memory.setWord(memoryAddress, newValue);
-    }
-
-    addrZeroPage() {
-        let zeroPageAddr = this.fetchByte();
-        return zeroPageAddr;
     }
     
     addrZeroPageX() {
@@ -302,7 +264,7 @@ class cpu {
     }
 
     pushPSToStack() {
-        const PSStack = this.statusFlags | BreakFlagBit | UnusedFlagBit;
+        const PSStack = this.statusFlags | BREAK_FLAG_BIT | UNUSED_FLAG_BIT;
         this.pushByteToStack(PSStack);
     }
 
@@ -331,7 +293,7 @@ class cpu {
         let zero = register == 0? 1 : 0;
         this.setRegister('Z', zero);
 
-        let negative = (register & NegativeFlagBit) > 0? 1 : 0;
+        let negative = (register & NEGATIVE_FLAG_BIT) > 0? 1 : 0;
         this.setRegister('N', negative);
     }
 
@@ -378,7 +340,6 @@ class cpu {
         
         //DECIMAL
         if(isDecimalMode) {
-            result = ARegValue + operand + CarryValue
             let lowRes = (ARegValue & 0x0f) + (operand & 0x0f) + CarryValue 
             if(lowRes > 9) {
              lowRes += 6
@@ -395,7 +356,6 @@ class cpu {
 
             this.setRegister('C', result > 99);
             this.setRegister('V', isOverflow);
-            
         }
         //BINARY
         else {
@@ -418,7 +378,6 @@ class cpu {
         //True for both binary and decimal
         this.setZeroAndNegativeFlags(result & 0xFF);
         this.setRegister('A', result);
-       
     }
 
     //substracts the operand with carry from the accumulator
@@ -426,15 +385,18 @@ class cpu {
         const isDecimalMode = this.getRegister('D');
 
         if(isDecimalMode) {
-            const ARegValue = this.getRegister('A');
-            //1. 9s'complement
-            const newOperand = this.NinesComplement(operand);
+            let aRegValue = this.getRegister('A');
+            let result = this.bcdSubstraction(operand, aRegValue);
+            this.setRegister('A', result);
 
-            //2.addition
-            const result =  ARegValue + newOperand;
-
-            //3. add carry if needed
-            
+            //flag operations
+            this.setZeroAndNegativeFlags(result & 0xFF);
+            let isOverflow = false;
+            if(result < -128 || result > 127) {
+                isOverflow = true
+            } 
+            this.setRegister('C', result <= 99);
+            this.setRegister('V', isOverflow);
         }
         else {
             const newOperand = ~operand;
@@ -442,29 +404,60 @@ class cpu {
         }
     }
 
-    NinesComplement(n) {
-        let number = n.toString()
-        number = number.split('')
-        for (let i=0 ; i < number.length; i++ ){       
-            if (number[i] != '.'){
-                number[i] = String(9 - Number(number[i]) + 0);
-             }
-        }
-        number = number.join("")
-        return parseInt(number)
-    }
+    ninesComplement(operand, reg) {
+        //for assessing, if it is a 1 or 2 digit number
+        let numberStringForm = operand.toString();
+        let regStringForm = reg.toString();
 
+        let ninesComplement;
+
+        if(numberStringForm.length == 1 && regStringForm.length == 1) {
+            ninesComplement = 9 - operand;
+        }
+        else {
+            ninesComplement = 99 - operand;
+        }
+
+        return ninesComplement;
+    } 
+    
+    bcdSubstraction(operand, aRegValue) {
+       //convert decimal number to original hexa form and make a number out of it
+       const operandHexForm = operand.toString(16); 
+       const operandHexNumberForm = parseInt(operandHexForm);
+
+       const aRegHexForm = aRegValue.toString(16);
+       const aRegHexNumberForm = parseInt(aRegHexForm);
+
+       const operandComplement = this.ninesComplement(operandHexNumberForm, aRegHexNumberForm);
+
+       let substractionResult = aRegHexNumberForm + operandComplement + this.getRegister('C');
+       let differenceStringForm = substractionResult.toString();
+       
+       //when the result is greater, than  than the permissible value
+       if(differenceStringForm.length == 3) {
+        substractionResult -= 100;
+       }
+       else if(operandHexForm.length == 1 && aRegHexForm.length == 1) {
+            substractionResult -= 10;
+       }
+       
+       differenceStringForm = "0x" + substractionResult.toString();
+       substractionResult = parseInt(differenceStringForm);
+       
+       return substractionResult;
+    }
 
     compareToRegister(operand, register) {
         const registerValue = this.getRegister(register); 
         const temp = registerValue - operand;
-        this.setRegister('N', (temp & NegativeFlagBit) > 0? 1 : 0);
+        this.setRegister('N', (temp & NEGATIVE_FLAG_BIT) > 0? 1 : 0);
         this.setRegister('Z',registerValue == operand? 1 : 0);
         this.setRegister('C', registerValue >= operand? 1 : 0);
     }
 
     shiftLeft(operand) {
-        const highestBitCheck = operand & NegativeFlagBit;
+        const highestBitCheck = operand & NEGATIVE_FLAG_BIT;
         this.setRegister('C', highestBitCheck > 0? 1 : 0);
         const result = operand << 1;
         this.setZeroAndNegativeFlags(result);
@@ -481,7 +474,7 @@ class cpu {
 
     rotateLeft(operand) {
         const newBit = this.getRegister('C') ? 1 : 0;
-        this.setRegister('C', (operand & NegativeFlagBit) > 0 ? 1 : 0);
+        this.setRegister('C', (operand & NEGATIVE_FLAG_BIT) > 0 ? 1 : 0);
         operand = operand << 1;
         operand |= newBit;
         operand = operand & 0xFF;
@@ -495,7 +488,7 @@ class cpu {
 
         if (this.getRegister('C'))
         {
-            operand |= NegativeFlagBit;
+            operand |= NEGATIVE_FLAG_BIT;
         }
         
         this.setRegister('C', oldBit);
@@ -547,7 +540,7 @@ class cpu {
     }
 
     randomByte() {
-        return Math.floor(Math.random() * 255);
+        return Math.floor(Math.random() * 256);
     }
 
     getAllRegisters() {
@@ -568,22 +561,19 @@ class cpu {
     step() {
         const instruction = this.fetchByte();
         const result = this.execute(instruction);
-        let isBreak = false;
-        
+
+        let isBreak; 
         if(instruction == INS.BRK) {
             isBreak = true;
         }
+        else {
+            isBreak = false;
+        }
 
         const newRandomByte = this.randomByte();
-        this.memory.setByte(RandomByteAddress, newRandomByte);
+        this.memory.setByte(RANDOM_BYTE_ADDRESS, newRandomByte);
         
         return {result, isBreak};
-    }
-
-    debug() {
-        this.registerNames.forEach(registerName => {
-            console.log(`${registerName}: 0x${this.getRegister(registerName).toString(8).padStart(2,0)} `)
-        })
     }
 
     execute(instruction) {
@@ -672,72 +662,81 @@ class cpu {
             case INS.LDA_ABS:
             {
                 const address = this.addrAbsolute(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('A', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('A', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDX_ABS:
             {
                 const address = this.addrAbsolute();
-                const newValue = this.readByte(address);
-                this.setRegister('X', newValue);
+                const newByte= this.readByte(address);
+                this.setRegister('X', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDY_ABS:
             {
                 const address = this.addrAbsolute();
-                const newValue = this.readByte(address);
-                this.setRegister('Y', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('Y', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDA_ABSX:
             {
                 const address = this.addrAbsoluteX(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('A', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('A', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDY_ABSX:
             {
                 const address = this.addrAbsoluteX(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('Y', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('Y', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDA_ABSY:
             {
                 const address = this.addrAbsoluteY(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('A', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('A', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDX_ABSY:
             {
                 const address = this.addrAbsoluteY(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('X', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('X', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 4;
                 break;
             }
             case INS.LDA_INDX:
             {
                 const address = this.addrIndirectX();
-                const newValue = this.readByte(address);
-                this.setRegister('A', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('A', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 6;
                 break;
             }
             case INS.LDA_INDY:
             {
                 const address = this.addrIndirectY(tempObj);
-                const newValue = this.readByte(address);
-                this.setRegister('A', newValue);
+                const newByte = this.readByte(address);
+                this.setRegister('A', newByte);
+                this.setZeroAndNegativeFlags(newByte);
                 tempObj.cycles += 5;
                 break;
             }
@@ -745,7 +744,7 @@ class cpu {
             //Store
             case INS.STA_ZP:
             {   
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const newValue = this.getRegister('A');
                 this.writeByte(address, newValue);
                 tempObj.cycles += 3;
@@ -753,7 +752,7 @@ class cpu {
             }
             case INS.STX_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const newValue = this.getRegister('X');
                 this.writeByte(address, newValue);
                 tempObj.cycles += 3;
@@ -761,7 +760,7 @@ class cpu {
             }
             case INS.STY_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const newValue = this.getRegister('Y');
                 this.writeByte(address, newValue);
                 tempObj.cycles += 3;
@@ -946,7 +945,7 @@ class cpu {
             case INS.PLP:
             {
                 let PSFromStack = this.popByteFromStack();
-                PSFromStack &= ~(UnusedFlagBit | BreakFlagBit);
+                PSFromStack &= ~(UNUSED_FLAG_BIT | BREAK_FLAG_BIT);
                 this.statusFlags = 0;
                 this.statusFlags |= PSFromStack;
                 tempObj.cycles += 4;
@@ -964,7 +963,7 @@ class cpu {
             }
             case INS.AND_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const value = this.getRegister('A') & this.readByte(address);
                 this.setRegister('A', value);
                 this.setZeroAndNegativeFlags(value);
@@ -1037,7 +1036,7 @@ class cpu {
             }
             case INS.ORA_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const value = this.getRegister('A') | this.readByte(address);
                 this.setRegister('A', value);
                 this.setZeroAndNegativeFlags(value);
@@ -1110,7 +1109,7 @@ class cpu {
             }
             case INS.EOR_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const value = this.getRegister('A') ^ this.readByte(address);
                 this.setRegister('A', value);
                 this.setZeroAndNegativeFlags(value);
@@ -1175,12 +1174,12 @@ class cpu {
             //Bit operations
             case INS.BIT_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const AReg = this.getRegister('A')
                 const value = AReg & this.readByte(address);
                 const zero = !(AReg & value);
-                const negative = (value & NegativeFlagBit) != 0;
-                const overflow = (value & OverflowFlagBit) != 0;
+                const negative = (value & NEGATIVE_FLAG_BIT) != 0;
+                const overflow = (value & OVERFLOW_FLAG_BIT) != 0;
 
                 this.setRegister('Z', zero);
                 this.setRegister('N', negative);
@@ -1194,8 +1193,8 @@ class cpu {
                 const AReg = this.getRegister('A')
                 const value = AReg & this.readByte(address);
                 const zero = !(AReg & value);
-                const negative = (value & NegativeFlagBit) != 0;
-                const overflow = (value & OverflowFlagBit) != 0;
+                const negative = (value & NEGATIVE_FLAG_BIT) != 0;
+                const overflow = (value & OVERFLOW_FLAG_BIT) != 0;
 
                 this.setRegister('Z', zero);
                 this.setRegister('N', negative);
@@ -1273,7 +1272,7 @@ class cpu {
             }
             case INS.DEC_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 let value = this.readByte(address);
                 value--;
                 this.writeByte(address, value);
@@ -1313,7 +1312,7 @@ class cpu {
             }
             case INS.INC_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 let value = this.readByte(address);
                 value++;
                 this.writeByte(address, value);
@@ -1480,7 +1479,7 @@ class cpu {
             }
             case INS.ADC_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 this.addition(operand);
                 tempObj.cycles += 3;
@@ -1527,7 +1526,7 @@ class cpu {
             } 
             case INS.SBC_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 this.substraction(operand);
                 tempObj.cycles += 3;
@@ -1584,7 +1583,7 @@ class cpu {
             }
             case INS.CMP_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand =this.readByte(address);
                 this.compareToRegister(operand,'A');
                 tempObj.cycles += 3;
@@ -1655,7 +1654,7 @@ class cpu {
             }
             case INS.CPX_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand =this.readByte(address);
                 this.compareToRegister(operand,'X');
                 tempObj.cycles += 3;
@@ -1678,7 +1677,7 @@ class cpu {
             }
             case INS.CPY_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand =this.readByte(address);
                 this.compareToRegister(operand,'Y');
                 tempObj.cycles += 3;
@@ -1713,7 +1712,7 @@ class cpu {
             }
             case INS.ASL_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 const newValue = this.shiftLeft(operand);
                 this.writeByte(address, newValue);
@@ -1756,7 +1755,7 @@ class cpu {
             }
             case INS.LSR_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 const newValue = this.shiftRight(operand);
                 this.writeByte(address, newValue);
@@ -1799,7 +1798,7 @@ class cpu {
             }
             case INS.ROL_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 const result = this.rotateLeft(operand);
                 this.writeByte(address, result);
@@ -1842,7 +1841,7 @@ class cpu {
             }
             case INS.ROR_ZP:
             {
-                const address = this.addrZeroPage();
+                const address = this.fetchByte();
                 const operand = this.readByte(address);
                 const result = this.rotateRight(operand);
                 this.writeByte(address, result);
@@ -1858,7 +1857,6 @@ class cpu {
                 tempObj.cycles += 6;
                 break;
             }
-            
             case INS.NOP:
             {
                 tempObj.cycles += 2;
@@ -1896,4 +1894,4 @@ function createRegisters(numOfRegisters) {
     return registerView;
 }
 
-export default cpu;
+export default Cpu;

@@ -1,9 +1,9 @@
 import React from 'react'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 
 const PiXEL_NUM_PER_LINE = 32;
 
-const Monitor = ({memory}) => {
+const Monitor = () => {
   const canvasRef = useRef();
   const ctxRef = useRef();
   const pixelWidthRef = useRef();

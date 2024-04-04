@@ -1,4 +1,4 @@
-const options = ['Címzés 1', 'Címzés 2', 'Címzés 3', 'Címzés 4', 'Aritmetika',"Decimális mód", "Elágazás", "Ugrás", "Stack", "Logikai műveletek", "Eltolás, rotáció", "Szubrutin", "Végtelen ciklus","16 bit összeadás" ,"Kiírás", "Bekérés", "Véletlenszám", "Összeadás bekéréssel"];
+const options = ['Címzés 1', 'Címzés 2', 'Címzés 3', 'Címzés 4', 'Aritmetika',"Decimális mód", "Elágazás", "Ugrás", "Stack", "Logikai műveletek", "Eltolás, rotáció", "Szubrutin", "Végtelen ciklus","16 bites összeadás" ,"Kiírás", "Bekérés", "Véletlenszám", "Összeadás bekéréssel"];
   const preCodes = [[";Bennefoglalt",
                      "LDA #15 ;betölti az A reg-be a decimális értéket", 
                      "LDX #$15 ;betölti az X reg-be hexadecimális értéket",
@@ -87,14 +87,23 @@ const options = ['Címzés 1', 'Címzés 2', 'Címzés 3', 'Címzés 4', 'Aritme
                      "DEY"
                     ],
                     [
+                      ";Összeadás egyező eredménnyel",
                       "SED",
                       "CLC",
                       "LDA #$50",
                       "ADC #$40",
                       "",
+                      ";Összeadás decimálisban mást hozó eredménnyel",
                       "CLC",
-                      "TAX",
-                      "ADC #$11"
+                      "TAX ;Összeadás eredménye X regiszterbe kerül",
+                      "ADC #$11",
+                      "",
+                      ";Kivonás decimálisban mást hozó eredménnyel",
+                      "TAY ;Második összeadás eredménye Y regiszterbe kerül",
+                      "SED",
+                      "SEC",
+                      "LDA #$20",
+                      "SBC #$35"
                     ],
                     ["LDA #9 ;számon tartja az eredeti értéket",
                      "TAX",
@@ -126,14 +135,14 @@ const options = ['Címzés 1', 'Címzés 2', 'Címzés 3', 'Címzés 4', 'Aritme
                      "INX ;Stackre mentés után növeli a köv. mentendő értéket",
                      "INY ;Hogy a sorban következő pixelt írja felül",
                      "CPY #$10",
-                     "BNE elso_fel ;Addig fut, amíg 10 nem lesz az Y értéke",
+                     "BNE elso_fel ;Addig fut, amíg 16 nem lesz az Y értéke",
                      "",
                      "masodik_fel:",
                      "PLA ;Fordított sorrendben A reg-be teszi a stackről az értéket",
                      "STA $0200,Y",
                      "INY ;Hogy a sorban következő pixelt írja felül",
                      "CPY #$20",
-                     "BNE masodik_fel ;Y=10-től fut addig, amíg Y!=20"
+                     "BNE masodik_fel ;Y=16-től fut addig, amíg Y!=32"
                     ],
                     [
                      ";És",

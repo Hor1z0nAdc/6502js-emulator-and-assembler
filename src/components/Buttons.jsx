@@ -3,9 +3,12 @@ import { useState, useEffect, useRef } from 'react';
 import Popup from '../components/Popup'
 import { options, preCodes } from "../data/codes.js";
 
-const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey, setNeedKey, setRedraw, keyEnabledRef, consoleRef, setConsoleText, setDisableConsole, showMonitor, setShowConsole, cycles, draw, setCode, setMessages, setRegisters, setStatusFlags, setCycles, Assembler, Cpu, transformRegValues, prevNumSystemRef, currentNumSystemRef}) => {
+const INITIAL_FLAG_VALUES = {N: 0, V:0, Unused:1, B: 0, D: 0, I: 0, Z:0, C: 0};
+const INITIAL_REGISTER_VALUES = {A: "$0000", X:"$0000", Y:"$0000", PC: "$0000", SP:"$0000", SR: "$0000"};
+
+const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey, setNeedKey, keyEnabledRef, consoleRef, setConsoleText, setDisableConsole, showMonitor, setShowConsole, draw, setCode, setMessages, setRegisters, setStatusFlags, setCycles, Assembler, Cpu, transformRegValues, prevNumSystemRef, currentNumSystemRef}) => {
  
-  const [currentCode, setCurrentCode] = useState(options[0]);
+  const [currentCodeName, setCurrentCodeName] = useState(options[0]);
   const [localStorageKeys, setlocalStorageKeys] = useState([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveFail, setSaveFail] = useState(false);
@@ -15,14 +18,12 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
   const [disableStop, setDisableStop] = useState(true);
   const [disableDelete, setDisableDelete] = useState(true);
   const [disableRunLine, setDisableRunLine] = useState(false);
-  const [hexdump, setHexdump] = useState(false);
+  const [showHexdump, setShowHexdump] = useState(false);
   const [saveName, setSaveName] = useState("");
-  const [saveWindow, setSaveWindow] = useState(false);
+  const [showSaveWindow, setShowSaveWindow] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [hexdumpValue, setHexdumpValue] = useState("");
   const [errorText, setErrorText] = useState("");
-  const [localStorageDataChange, setLocalStorageDataChange] = useState(false);
-  const localStorageDataRef = useRef(localStorage);
   const cyclesRef = useRef(0);
   const needResetRef = useRef(false);
   const workerRef = useRef(new Worker("out.js"));
@@ -64,64 +65,73 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
 
   function workerMessageHandler(event) {
     const isDone = event.data.isDone;
-  
-    if(!isDone) {
-      let allCycles = event.data.allCycles;
-      const workerCpu = event.data.workerCpu;
-      const workerMemory = event.data.workerMemory;
-      const routine = event.data.routine;
-      Cpu.byteRegisters = workerCpu.byteRegisters;
-      Cpu.wordRegisters = workerCpu.wordRegisters;
-      Cpu.statusFlags = workerCpu.statusFlags;
-      new Uint8Array(memory.memoryCells).set(new Uint8Array(workerMemory.memoryCells));
-      
-      if(!showMonitorRef.current) {
-        draw(memory);
-      }
 
-      if(routine == "cout") {
-        const asciiCode = Cpu.getRegister("A");
-        const char = String.fromCharCode(asciiCode);
-        setConsoleText((previous) => previous + char);
-        setShowConsole(true);
-      }
-      else if(routine == "skey") {
-        setNeedKey(true);
-        keyEnabledRef.current = true;
-        setShowConsole(true);
-        setDisableConsole(false);
-      }
-      else if(routine == "kin") {
-        Cpu.setRegister("A", keyBufferRef.current);
-      }
-      
-      else if(routine == "clear") {
-        setShowConsole(true);
-        setConsoleText("");
-      }
-      
-      const newRegisterValues = Cpu.getAllRegisters();
-      const newStatusFlags = Cpu.getStatusFlags();
-      cyclesRef.current = allCycles;
-  
-      prevNumSystemRef.current = "decimal";
-      let newTransformedRegValues = newRegisterValues;
-      if(currentNumSystemRef.current != "decimal") {
-        newTransformedRegValues = transformRegValues(newRegisterValues);
-      }
-  
-      if(allCycles > 9999) allCycles = "9999+";
-      setCycles(allCycles);
-      setRegisters(newTransformedRegValues);
-      setStatusFlags(newStatusFlags);
+    //get all the data from the message
+    let allCycles = event.data.allCycles;
+    const workerCpuData = event.data.cpuData;
+    const workerMemoryData = event.data.memoryData;
+    const routine = event.data.routine;
+    
+    //set the cpu and memory values to the new data from message
+    Cpu.byteRegisters = workerCpuData.byteRegisters;
+    Cpu.wordRegisters = workerCpuData.wordRegisters;
+    Cpu.statusFlags = workerCpuData.statusFlags;
+    new Uint8Array(memory.memoryCells).set(new Uint8Array(workerMemoryData));
+    
+    if(!showMonitorRef.current) {
+      draw(memory);
+    }
 
+    //preprocess register values and show it on the front-end
+    const newRegisterValues = Cpu.getAllRegisters();
+    const newStatusFlags = Cpu.getStatusFlags();
+    cyclesRef.current = allCycles;
+
+    prevNumSystemRef.current = "decimal";
+    let newTransformedRegValues = newRegisterValues;
+    if(currentNumSystemRef.current != "decimal") {
+      newTransformedRegValues = transformRegValues(newRegisterValues);
     }
-    else {
-      setDisableRun(false);
-      setDisableRunLine(false);
-      setDisableStop(true);
-      setMessages((message) => message + "\nA kód végrehajtódott\nCpu ciklusok száma: " + cyclesRef.current + "\n");
+
+    if(allCycles > 99999) {
+      allCycles = "99999+";
     }
+    setCycles(allCycles);
+    setRegisters(newTransformedRegValues);
+    setStatusFlags(newStatusFlags);
+  
+    if(!isDone) {    
+
+      if(routine) {
+          if(routine == "cout") {
+            const asciiCode = Cpu.getRegister("A");
+            const char = String.fromCharCode(asciiCode);
+            setConsoleText((previous) => previous + char);
+            setShowConsole(true);
+          }
+          else if(routine == "skey") {
+            setNeedKey(true);
+            keyEnabledRef.current = true;
+            setShowConsole(true);
+            setDisableConsole(false);
+          }
+          else if(routine == "kin") {
+            Cpu.setRegister("A", keyBufferRef.current);
+          }
+          else if(routine == "clear") {
+            setShowConsole(true);
+            setConsoleText("");
+          }
+      }
+      
+      return;
+    }
+    
+    //The program run has finished
+    setDisableRun(false);
+    setDisableRunLine(false);
+    setDisableStop(true);
+    setMessages((message) => message + "\nA kód végrehajtódott\nCpu ciklusok száma: " + cyclesRef.current + "\n");
   }
 
   function loadSelectedCode(selectedKey) {
@@ -167,19 +177,24 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
   }
 
   function onCodeChangeHandler(event) {
-      setRegisters({A: "$0000", X:"$0000", Y:"$0000", PC: "$0000", SP:"$0000", SR: "$0000"});
-      setStatusFlags({N: 0, V:0, Unused:0, B: 0, D: 0, I: 0, Z:0, C: 0});
+      setRegisters(INITIAL_REGISTER_VALUES);
+      setStatusFlags(INITIAL_FLAG_VALUES);
       setCycles(0);
       
       let value = event.target.value;
-      setCurrentCode(value);
+      setCurrentCodeName(value);
       setSaveName(value);
+      memory.initialise();
 
       if(value == "") {
         setCode("");
       }
       else {
         loadSelectedCode(value);
+      }
+
+      if(showMonitor) {
+        draw(memory);
       }
 
       const keyIndex = options.indexOf(value);
@@ -199,42 +214,43 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
         isDisableDelete = true;
       }
 
-      
-
       setDisableSave(isDisableSave);
       setDisableDelete(isDisableDelete);
-
   }
 
   function assemblingHandler() {
-    setStatusFlags({N: 0, V:0, Unused:0, B: 0, D: 0, I: 0, Z:0, C: 0});
-    setCycles(0);
-    setConsoleText("")
-    cyclesRef.current = 0;
-    
-    let lines = code.split("\n");
-    Assembler.initAssembling();
-    Assembler.lines = lines;
-    const assemblerResult = Assembler.assemble();
-    
-    let message;
-    let isError = assemblerResult.isError;
-    let newPC = "0";
+      setStatusFlags(INITIAL_FLAG_VALUES);
+      setCycles(0);
+      setConsoleText("")
+      cyclesRef.current = 0;
+      
+      let lines = code.split("\n");
+      Assembler.initAssembling();
+      Assembler.lines = lines;
+      const assemblerResult = Assembler.assemble();
+      
+      let message;
+      let isError = assemblerResult.isError;
+      let newPC = "0";
 
-    if(!isError) {
-      newPC = Assembler.startingAddress.toString();
-      const bytes = assemblerResult.bytes;
-      const stringBytes = assemblerResult.stringBytes;
+      if(!isError) {
+        newPC = Assembler.startingAddress.toString();
+        const bytes = assemblerResult.bytes;
+        const stringBytes = assemblerResult.stringBytes;
 
-      Cpu.reset();
-      Cpu.loadProgram(Assembler.startingAddress, Assembler.assembledCode, Assembler.assembledStringData);
-      message = "Az assembler sikeresen lefutott.";
-      message += "\nCímkék száma: " + assemblerResult.labelNum;
-      message +=`\nKód mérete: ${assemblerResult.bytes} byte\n`;
+        Cpu.reset();
+        Cpu.loadProgram(Assembler.startingAddress, Assembler.assembledCode, Assembler.assembledStringData);
+        message = "Az assembler sikeresen lefutott.";
+        message += "\nCímkék száma: " + assemblerResult.labelNum;
+        message +=`\nKód mérete: ${assemblerResult.bytes} byte\n`;
 
-      if(assemblerResult.stringBytes > 0) {
-        message +=`Kód mérete string adatokkal együtt: ${stringBytes + bytes} byte\n`;
-      }
+        if(assemblerResult.stringBytes > 0) {
+          message +=`Kód mérete string adatokkal együtt: ${stringBytes + bytes} byte\n`;
+        }
+
+        if(showMonitor) {
+          draw(memory);
+        }
     }
     else {
       message = "Az assembler hibát talált, nincs futtatandó kód.";
@@ -257,7 +273,7 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
 
   function newCodeHandler() {
     setCode("");
-    setCurrentCode("");
+    setCurrentCodeName("");
     setSaveName("");
     setMessages("")
     setDisableRun(true);
@@ -267,12 +283,11 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
 
   function saveWindowHandler() {
     const element = selectElementRef.current;
-    console.log(element)
-    setSaveName(element.options[element.selectedIndex].text);
 
+    setSaveName(element.options[element.selectedIndex].text);
     setSaveSuccess(false);
     setSaveFail(false);
-    setSaveWindow(true);
+    setShowSaveWindow(true);
 
   }
 
@@ -282,11 +297,11 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
 
   function deleteCode() {
     setShowDelete(false);
-    localStorage.removeItem(currentCode);
+    localStorage.removeItem(currentCodeName);
     const localStorageKeys = Object.keys(localStorage);
     setlocalStorageKeys(localStorageKeys);
 
-    setCurrentCode(options[0]);
+    setCurrentCodeName(options[0]);
     loadSelectedCode(options[0]);
     setDisableDelete(true);
   }
@@ -320,7 +335,7 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
     }
     
     setSaveName("");
-    setCurrentCode(saveName);
+    setCurrentCodeName(saveName);
     localStorage.setItem(saveName, code);
     const localStorageKeys = Object.keys(localStorage);
     setlocalStorageKeys(localStorageKeys);
@@ -330,7 +345,7 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
   function hexDumpHandler() {
     const hexDumpResult = Assembler.getHexDump();
     setHexdumpValue(hexDumpResult);
-    setHexdump(true);
+    setShowHexdump(true);
   }
 
   function runHandler() {
@@ -401,7 +416,7 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
     setMessages((message) => message + "\nLefutott sor: " + executedLineNum);
     
     const done = Cpu.isCodeDone();
-    if(done || runResult.isBreak || Cpu.getRegister("PC") > Cpu.endAddress) {
+    if(done || runResult.isBreak) {
       setDisableRunLine(true);
       setMessages((message) => message + "\nA kód végrehajtódott\nCpu ciklusok száma: " + cyclesRef.current + "\n");
     }
@@ -413,7 +428,7 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
           <button className='button' onClick={newCodeHandler}>Új kód</button>
           <button className='button' onClick={saveWindowHandler} disabled={disableSave}>Kód mentése</button>
           <button className='button' onClick={deleteCodeHandler}  disabled={disableDelete}>Kód törlése</button>
-          <select value={currentCode} ref={selectElementRef} onChange={onCodeChangeHandler}>
+          <select value={currentCodeName} ref={selectElementRef} onChange={onCodeChangeHandler}>
             <optgroup label='alapértelmezett kód'>
                   {options.map((option, index) => { 
                     return <option key={index}>{option}</option>
@@ -435,13 +450,13 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
           <button className='button' disabled={disableDump} onClick={hexDumpHandler}>Hexdump</button>
       </div>
 
-      <Popup trigger={hexdump} title="Hexdump" setShow={setHexdump}>
+      <Popup trigger={showHexdump} title="Hexdump" setShow={setShowHexdump}>
           <div className='hexdump-div'>
               <pre className='pre'>{hexdumpValue}</pre>
           </div>
       </Popup>
 
-      <Popup trigger={saveWindow} title="Kód mentése" setShow={setSaveWindow}>
+      <Popup trigger={showSaveWindow} title="Kód mentése" setShow={setShowSaveWindow}>
           <div >  
                   <div style={{paddingBottom: "10px"}}>
                     <label style={{paddingRight: "10px"}}>Kód neve</label>
@@ -449,10 +464,10 @@ const Buttons = ({code, showMonitorRef, memory, messages, messageDivRef, needKey
                   </div>
                   <button className='popup-button padding' onClick={saveHandler}>Mentés</button>
                   <div className='image-container'>
-                    {saveSuccess && (<img className='okay-img' src='../../okay.svg' alt='okay'></img>)}
+                    {saveSuccess && (<img className='okay-img' src='../../images/okay.svg' alt='okay'></img>)}
                     {saveFail && (<div>
                                     <h3>{errorText}</h3>
-                                    <img className='okay-img' src='../../cross.png' alt='okay'></img>
+                                    <img className='okay-img' src='../../images/cross.png' alt='okay'></img>
                                   </div>)}
                   </div>
           </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 
 const registers = ({registers, statusFlags, setRegisters, setShowConsole, setNumSystem, setShowMonitor, numSystem, transformRegValues, setShowMemory, currentNumSystemRef, cycles}) => {
 

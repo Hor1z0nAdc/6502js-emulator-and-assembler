@@ -1,4 +1,4 @@
-Az alkalmazás elérhető a következő linken: 
+Az alkalmazás elérhető a következő linken: https://sparkly-druid-5dc666.netlify.app/
 
 Viszont mi magunk is hosztolhatjuk lokálisan.
 A lokális hosztoláshoz először is szükség van a Node.js futtatási környezetre, ami elérhető ezen a linken: https://nodejs.org/en
